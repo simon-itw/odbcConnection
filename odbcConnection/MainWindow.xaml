@@ -19,6 +19,9 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Margin="15" TextWrapping="Wrap" HorizontalAlignment="Center" Text="AnfangsDatum auswählen"/>
@@ -29,8 +32,11 @@
         <!--<Calendar  HorizontalAlignment="Left" SelectionMode="SingleRange" VerticalAlignment="Center" Margin="0,0,0,0" Visibility="Visible" x:Name="CalenderZeitraum"></Calendar>-->
         <TextBlock Grid.Row="2" Margin="15" TextWrapping="Wrap" FontWeight="Bold"  HorizontalAlignment="Center" Name="tb_anfangDisplay"/>
         <TextBlock Grid.Column="1"  Grid.Row="2" Margin="15" TextWrapping="Wrap" FontWeight="Bold" HorizontalAlignment="Center" Name="tb_endeDisplay"/>
+        <TextBlock Grid.Column="1"  Grid.Row="5" Margin="15" TextWrapping="Wrap" FontWeight="Bold" HorizontalAlignment="Center" Name="tb_urlaubBeantragt" Visibility="Collapsed"/>
+        
 
         <Button Grid.Row="4" Grid.ColumnSpan="2" Margin="15" FontSize="20" Padding="10" HorizontalAlignment="Center" Width="Auto" Height="Auto" Click="Button_Send" Visibility="Collapsed" Content="Auswahl bestätigen" Name="btnSend"/>
+        
 
 
 

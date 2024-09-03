@@ -15,8 +15,10 @@ namespace odbcConnection
 {
     public partial class MainWindow : Window
     {
-        string auswahlDatumAnfang = null;
-        string auswahlDatumEnde = null;
+        string auswahlDatumAnfang;
+        string auswahlDatumEnde;
+        
+ 
         public MainWindow()
         {
             InitializeComponent();
@@ -50,11 +52,39 @@ namespace odbcConnection
 
         private void BtnVisibility()
         {
-            if (!string.IsNullOrEmpty(auswahlDatumAnfang) && !string.IsNullOrEmpty(auswahlDatumEnde))
+            // type casting strings und abfrage auf anfang kleiner als ende
+            if(DateTime.TryParse(auswahlDatumAnfang, out DateTime startDatum) &&
+                DateTime.TryParse(auswahlDatumEnde, out DateTime endDatum))
             {
+                TimeSpan urlaubBeantragt, urlaubMax = TimeSpan.FromDays(21);
+                urlaubBeantragt = endDatum - startDatum;
+                 
+                if (endDatum>=startDatum && urlaubBeantragt <= urlaubMax)
+                {
 
-                btnSend.Visibility = Visibility.Visible;
+                    btnSend.Visibility = Visibility.Visible;
+                    //urlaubBeantragt = endDatum - startDatum;
+                    tb_urlaubBeantragt.Visibility = Visibility.Visible;
+                    tb_urlaubBeantragt.Text = $"Dauer: {urlaubBeantragt.Days} Tage beantragt.\nVerbleibende Urlaubstage: {urlaubMax.Days - urlaubBeantragt.Days}";
+                }
+                else
+                {
+                    if(urlaubBeantragt > urlaubMax)
+                    {
+                        btnSend.Visibility = Visibility.Collapsed;
+                        tb_urlaubBeantragt.Visibility = Visibility.Collapsed;
+                        MessageBox.Show("Die Auswahl übersschreitet deine maximalen Urlaubstage");
+                    }
+                    else
+                    {
+                        btnSend.Visibility = Visibility.Collapsed;
+                        tb_urlaubBeantragt.Visibility = Visibility.Collapsed;
+                        MessageBox.Show("Das EndDatum darf nicht vor dem AnfangDatum liegen");
+                    }
+                   
+                }
             }
+
         }
 
         private void Button_Send(object sender, RoutedEventArgs e)
@@ -101,7 +131,7 @@ namespace odbcConnection
                             MessageBox.Show("Daten NICHT eingetragen");
                         }  
                     }
-
+                    
                     connect.CloseConnection(connection);
                 }
             }
@@ -113,6 +143,7 @@ namespace odbcConnection
 
 
         }
+
     }
 
    
