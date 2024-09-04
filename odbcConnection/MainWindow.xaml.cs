@@ -93,34 +93,38 @@ namespace odbcConnection
                 if (endDatum < startDatum)
                 {
                     ShowError("Das EndDatum darf nicht vor dem AnfangsDatum liegen");
-                }
 
-                List<DateTime> feiertage = await GetFeiertageAsync();
-                TimeSpan urlaubBeantragt = endDatum - startDatum, urlaubMax = TimeSpan.FromDays(27);
-
-                int feiertagUndWochenendeAnzahl = 0;
-                for (DateTime datum = startDatum; datum <= endDatum; datum = datum.AddDays(1))
-                {
-                    if (istFeiertagWochenende(datum, feiertage))
-                    {
-                        feiertagUndWochenendeAnzahl++;
-                    }
-                }
-
-                urlaubBeantragt -= TimeSpan.FromDays(feiertagUndWochenendeAnzahl);
-
-                if (urlaubBeantragt > urlaubMax)
-                {                  
-                    ShowError("Die Auswahl übersschreitet deine maximalen Urlaubstage");
                 }
                 else
                 {
-                    if (startDatum == endDatum)
+
+                    List<DateTime> feiertage = await GetFeiertageAsync();
+                    TimeSpan urlaubBeantragt = endDatum - startDatum, urlaubMax = TimeSpan.FromDays(27);
+
+                    int feiertagUndWochenendeAnzahl = 0;
+                    for (DateTime datum = startDatum; datum <= endDatum; datum = datum.AddDays(1))
                     {
-                        urlaubBeantragt += TimeSpan.FromDays(1);
+                        if (istFeiertagWochenende(datum, feiertage))
+                        {
+                            feiertagUndWochenendeAnzahl++;
+                        }
                     }
 
-                    ShowSuccess(urlaubBeantragt, urlaubMax);
+                    urlaubBeantragt -= TimeSpan.FromDays(feiertagUndWochenendeAnzahl);
+
+                    if (urlaubBeantragt > urlaubMax)
+                    {
+                        ShowError("Die Auswahl übersschreitet deine maximalen Urlaubstage");
+                    }
+                    else
+                    {
+                        if (startDatum == endDatum)
+                        {
+                            urlaubBeantragt += TimeSpan.FromDays(1);
+                        }
+
+                        ShowSuccess(urlaubBeantragt, urlaubMax);
+                    }
                 }
             }
         }
