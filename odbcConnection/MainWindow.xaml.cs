@@ -1,4 +1,5 @@
-﻿using odbcConnection.Data;
+﻿using Newtonsoft.Json.Linq;
+using odbcConnection.Data;
 using System.Data;
 using System.Text;
 using System.Windows;
@@ -10,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Diagnostics;
 
 namespace odbcConnection
 {
@@ -50,41 +52,77 @@ namespace odbcConnection
             }
         }
 
-        private void BtnVisibility()
+        private async Task<List<DateTime>> GetFeiertageAsync()
         {
-            // type casting strings und abfrage auf anfang kleiner als ende
-            if(DateTime.TryParse(auswahlDatumAnfang, out DateTime startDatum) &&
-                DateTime.TryParse(auswahlDatumEnde, out DateTime endDatum))
-            {
-                TimeSpan urlaubBeantragt, urlaubMax = TimeSpan.FromDays(21);
-                urlaubBeantragt = endDatum - startDatum;
-                 
-                if (endDatum>=startDatum && urlaubBeantragt <= urlaubMax)
-                {
+            FeiertagConnector connector = new FeiertagConnector();
+            List<DateTime> feiertagsDaten = await connector.GetFeiertageAsync();
 
-                    btnSend.Visibility = Visibility.Visible;
-                    //urlaubBeantragt = endDatum - startDatum;
-                    tb_urlaubBeantragt.Visibility = Visibility.Visible;
-                    tb_urlaubBeantragt.Text = $"Dauer: {urlaubBeantragt.Days} Tage beantragt.\nVerbleibende Urlaubstage: {urlaubMax.Days - urlaubBeantragt.Days}";
+            return feiertagsDaten;
+        }
+
+
+        private async void Button_Feiertag_Konsole(object sender, RoutedEventArgs e)
+        {
+            FeiertagConnector connector = new FeiertagConnector();
+            try
+            {
+                List<DateTime> feiertage = await connector.GetFeiertageAsync();
+                foreach (var feiertag in feiertage)
+                {
+                    Debug.WriteLine($"Feiertag: {feiertag:dd.MM.yyyy}");
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Fehler beim Abrufen der Feiertage: {ex.Message}");
+                MessageBox.Show("Fehler beim Abrufen der Feiertage.");
+            }
+        }
+
+        private bool istFeiertagWochenende(DateTime date, List<DateTime> feiertage)
+        {
+            return date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday || feiertage.Contains(date.Date);  
+        }
+
+
+        private async void BtnVisibility()
+        {
+            if (DateTime.TryParse(auswahlDatumAnfang, out DateTime startDatum) && DateTime.TryParse(auswahlDatumEnde, out DateTime endDatum))
+            {
+                if (endDatum < startDatum)
+                {
+                    ShowError("Das EndDatum darf nicht vor dem AnfangsDatum liegen");
+                }
+
+                List<DateTime> feiertage = await GetFeiertageAsync();
+                TimeSpan urlaubBeantragt = endDatum - startDatum, urlaubMax = TimeSpan.FromDays(27);
+
+                int feiertagUndWochenendeAnzahl = 0;
+                for (DateTime datum = startDatum; datum <= endDatum; datum = datum.AddDays(1))
+                {
+                    if (istFeiertagWochenende(datum, feiertage))
+                    {
+                        feiertagUndWochenendeAnzahl++;
+                    }
+                }
+
+                urlaubBeantragt -= TimeSpan.FromDays(feiertagUndWochenendeAnzahl);
+
+                if (urlaubBeantragt > urlaubMax)
+                {                  
+                    ShowError("Die Auswahl übersschreitet deine maximalen Urlaubstage");
                 }
                 else
                 {
-                    if(urlaubBeantragt > urlaubMax)
+                    if (startDatum == endDatum)
                     {
-                        btnSend.Visibility = Visibility.Collapsed;
-                        tb_urlaubBeantragt.Visibility = Visibility.Collapsed;
-                        MessageBox.Show("Die Auswahl übersschreitet deine maximalen Urlaubstage");
+                        urlaubBeantragt += TimeSpan.FromDays(1);
                     }
-                    else
-                    {
-                        btnSend.Visibility = Visibility.Collapsed;
-                        tb_urlaubBeantragt.Visibility = Visibility.Collapsed;
-                        MessageBox.Show("Das EndDatum darf nicht vor dem AnfangDatum liegen");
-                    }
-                   
+
+                    ShowSuccess(urlaubBeantragt, urlaubMax);
                 }
             }
-
         }
 
         private void Button_Send(object sender, RoutedEventArgs e)
@@ -142,6 +180,20 @@ namespace odbcConnection
 
 
 
+        }
+
+        private void ShowError(string message)
+        {
+            btnSend.Visibility = Visibility.Collapsed;
+            tb_urlaubBeantragt.Visibility = Visibility.Collapsed;
+            MessageBox.Show(message);
+        }
+
+        private void ShowSuccess(TimeSpan urlaubBeantragt, TimeSpan urlaubMax)
+        {
+            btnSend.Visibility = Visibility.Visible;
+            tb_urlaubBeantragt.Visibility = Visibility.Visible;
+            tb_urlaubBeantragt.Text = $"Dauer: {urlaubBeantragt.Days} Tage beantragt.\nVerbleibende Urlaubstage: {urlaubMax.Days - urlaubBeantragt.Days}\nStatus: ";
         }
 
     }
