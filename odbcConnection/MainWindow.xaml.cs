@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Diagnostics;
+using odbcConnection.subWin;
 
 namespace odbcConnection
 {
@@ -19,6 +20,8 @@ namespace odbcConnection
     {
         string auswahlDatumAnfang;
         string auswahlDatumEnde;
+
+        private feiertagDataGrid feiertagWindow;
         
  
         public MainWindow()
@@ -60,25 +63,6 @@ namespace odbcConnection
             return feiertagsDaten;
         }
 
-
-        private async void Button_Feiertag_Konsole(object sender, RoutedEventArgs e)
-        {
-            FeiertagConnector connector = new FeiertagConnector();
-            try
-            {
-                List<DateTime> feiertage = await connector.GetFeiertageAsync();
-                foreach (var feiertag in feiertage)
-                {
-                    Debug.WriteLine($"Feiertag: {feiertag:dd.MM.yyyy}");
-
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Fehler beim Abrufen der Feiertage: {ex.Message}");
-                MessageBox.Show("Fehler beim Abrufen der Feiertage.");
-            }
-        }
 
         private bool istFeiertagWochenende(DateTime date, List<DateTime> feiertage)
         {
@@ -198,6 +182,23 @@ namespace odbcConnection
             btnSend.Visibility = Visibility.Visible;
             tb_urlaubBeantragt.Visibility = Visibility.Visible;
             tb_urlaubBeantragt.Text = $"Dauer: {urlaubBeantragt.Days} Tage beantragt.\nVerbleibende Urlaubstage: {urlaubMax.Days - urlaubBeantragt.Days}\nStatus: ";
+        }
+
+        private void Button_FeiertagGrid(object sender, EventArgs e)
+        {
+            
+            
+            if (feiertagWindow == null)
+            {
+                feiertagWindow = new feiertagDataGrid();
+                feiertagWindow.Closed += (s, args) => feiertagWindow = null; // Setze auf null, wenn das Fenster geschlossen wird
+                feiertagWindow.Show();
+
+            }
+            else
+            {
+                feiertagWindow.Focus();
+            }
         }
 
     }
